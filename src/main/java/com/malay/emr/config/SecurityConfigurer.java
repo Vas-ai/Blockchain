@@ -51,7 +51,7 @@ class SecurityConfigurer extends WebSecurityConfigurerAdapter {
         httpSecurity.cors();
 
         httpSecurity.csrf().disable()
-                .authorizeRequests().antMatchers("/api/authenticate","/api/register").permitAll().
+                .authorizeRequests().antMatchers("/api/authenticate","/api/register","/api/patient-add/*","/api/doctor-add/*").permitAll().
                 anyRequest().authenticated().and().
                 exceptionHandling().and().sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS);

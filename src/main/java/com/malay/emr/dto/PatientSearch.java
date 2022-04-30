@@ -2,21 +2,26 @@ package com.malay.emr.dto;
 
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 public class PatientSearch {
 	private String givenName;
 	private String lastName;
+	
+	@JsonFormat(pattern="yyyy-MM-dd")
 	private Date dob;
+	
 	private String sex;
 	private String mobile;
-	private String email;
-	public PatientSearch(String givenName, String lastName, Date dob, String sex, String mobile, String email, int id) {
+	
+	public PatientSearch(String givenName, String lastName, Date dob, String sex, String mobile,  int id) {
 		super();
 		this.givenName = givenName;
 		this.lastName = lastName;
 		this.dob = dob;
 		this.sex = sex;
 		this.mobile = mobile;
-		this.email = email;
+		
 		this.id = id;
 	}
 	public String getGivenName() {
@@ -49,12 +54,7 @@ public class PatientSearch {
 	public void setMobile(String mobile) {
 		this.mobile = mobile;
 	}
-	public String getEmail() {
-		return email;
-	}
-	public void setEmail(String email) {
-		this.email = email;
-	}
+	
 	public int getId() {
 		return id;
 	}

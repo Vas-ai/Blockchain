@@ -4,6 +4,8 @@ import com.malay.emr.dto.AuthRequest;
 
 import com.malay.emr.dto.AuthResponse;
 import com.malay.emr.services.CredentialsService;
+import com.malay.emr.services.UserService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -29,7 +31,9 @@ public class AuthenticationController {
 
     @Autowired
     private CredentialsService credentialsService;
-
+    
+    @Autowired
+    private UserService userService;
 
     @RequestMapping(value = "/api/authenticate", method = RequestMethod.POST)
     public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthRequest authenticationRequest) throws Exception {
@@ -49,8 +53,8 @@ public class AuthenticationController {
 
         String username= userDetails.getUsername();
         final String jwt = jwtTokenUtil.generateToken(userDetails);
-
-        return ResponseEntity.ok(new AuthResponse(jwt,username));
+        final String type  = userService.getTypeByEmail( authenticationRequest.getEmail() );
+        return ResponseEntity.ok(new AuthResponse(jwt,username,type));
     }
 
 

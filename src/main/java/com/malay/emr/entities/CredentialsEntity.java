@@ -17,16 +17,8 @@ public class CredentialsEntity {
     @Column(name="password")
     private  String password;
 
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    @Column(name="type")
-    private  String type;
+    
+   
 
 
     @OneToOne(mappedBy = "credentials")

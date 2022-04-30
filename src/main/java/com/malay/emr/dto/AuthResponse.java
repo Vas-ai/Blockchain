@@ -6,10 +6,12 @@ public class AuthResponse implements Serializable {
 
     private final String jwt;
     private final String name;
-
-    public AuthResponse(String jwt, String name) {
+    private final String type;
+    
+    public AuthResponse(String jwt, String name,String type) {
         this.jwt = jwt;
         this.name = name;
+        this.type = type;
     }
 
     public String getJwt() {
@@ -19,4 +21,12 @@ public class AuthResponse implements Serializable {
     public String getName() {
         return name;
     }
+
+	public String getType() {
+		return type;
+	}
+    
+    
+    
+    
 }

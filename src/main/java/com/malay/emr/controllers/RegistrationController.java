@@ -3,6 +3,7 @@ package com.malay.emr.controllers;
 import com.malay.emr.dto.AuthRequest;
 import com.malay.emr.dto.DoctorDetailsDTO;
 import com.malay.emr.dto.PatientDetailsDTO;
+import com.malay.emr.dto.UserEmailDTO;
 import com.malay.emr.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -20,6 +21,10 @@ public class RegistrationController {
 
     @Autowired
     UserService userService;
+    @Autowired
+	UserEmailDTO emailDto;
+    
+    
 
     @PostMapping(value="/api/register")
     public ResponseEntity<String> registeration(@RequestBody AuthRequest cred) throws Exception{
@@ -31,7 +36,7 @@ public class RegistrationController {
             response=new ResponseEntity<String>("{\"message\":\"already registered\"}",new HttpHeaders(),HttpStatus.CONFLICT);
         }
         else{
-            response = new ResponseEntity<String>(" \"id\": "+id+" ",new HttpHeaders(), HttpStatus.OK);
+            response = new ResponseEntity<String>(" {\"id\": "+id+"} ",new HttpHeaders(), HttpStatus.OK);
         }
 
         return response;
@@ -39,10 +44,10 @@ public class RegistrationController {
 
     }
     
-    @PostMapping(value = "/api/patient/{credId}")
-    public ResponseEntity<?> addPatient(@PathVariable Integer credId,@RequestBody PatientDetailsDTO details) throws Exception{
+    @PostMapping(value = "/api/patient-add/{id}")
+    public ResponseEntity<?> addPatient(@PathVariable(name="id") Integer id, @RequestBody PatientDetailsDTO details) throws Exception{
 		
-    	boolean saved = userService.addPatient(credId,details);
+    	boolean saved = userService.addPatient(id,details);
     	ResponseEntity<String> response = new ResponseEntity<String>("",new HttpHeaders(),HttpStatus.BAD_REQUEST);
     	if(saved) {
     		response = new ResponseEntity<String>("{\"message\":\"created\"}",new HttpHeaders(),HttpStatus.OK);
@@ -52,10 +57,10 @@ public class RegistrationController {
     	
     }
     
-    @PostMapping(value = "/api/doctor/{credId}")
-    public ResponseEntity<?> addDoctor(@PathVariable Integer credId,@RequestBody DoctorDetailsDTO details) throws Exception{
+    @PostMapping(value = "/api/doctor-add/{id}")
+    public ResponseEntity<?> addDoctor(@PathVariable Integer id,@RequestBody DoctorDetailsDTO details) throws Exception{
 		
-    	boolean saved = userService.addDoctor(credId,details);
+    	boolean saved = userService.addDoctor(id,details);
     	ResponseEntity<String> response = new ResponseEntity<String>("",new HttpHeaders(),HttpStatus.BAD_REQUEST);
     	if(saved) {
     		response = new ResponseEntity<String>("{\"message\":\"created\"}",new HttpHeaders(),HttpStatus.OK);

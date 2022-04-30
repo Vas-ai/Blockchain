@@ -1,13 +1,15 @@
 package com.malay.emr.repository;
 
-import com.malay.emr.entities.PatientsEntity;
-
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+
+import com.malay.emr.entities.PatientsEntity;
 
 @Repository
 public interface PatientsDAO extends JpaRepository<PatientsEntity,Integer> {
-	List<PatientsEntity> findByGivenNameContainsOrLastNameContainsOrMobileContains(String term1,String term2,String term3);
+	@Query("select p from PatientsEntity p where p.givenName like %?1% or p.lastName like %?1% or p.mobile like %?1% ")
+	List<PatientsEntity> findByGivenNameOrLastNameOrMobile(String term);
 }

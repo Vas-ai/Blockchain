@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.malay.emr.dto.PatientSearch;
+import com.malay.emr.dto.UserEmailDTO;
 import com.malay.emr.services.UserService;
 
 @CrossOrigin
@@ -22,7 +23,8 @@ public class PatientController {
 	
 	@Autowired
 	UserService userService;
-	
+	@Autowired
+	UserEmailDTO emailDto;
 
     @RequestMapping(value = "/api/patient", method = RequestMethod.GET)
     public ResponseEntity<List<PatientSearch>> searchPatients(@RequestParam(name="term") String term) throws Exception{
@@ -36,6 +38,18 @@ public class PatientController {
     	response = new ResponseEntity<List<PatientSearch>>(list,new HttpHeaders(),HttpStatus.OK);
     	
     	return response;
+    }
+    
+    @RequestMapping(value = "/api/patient-profile", method = RequestMethod.GET)
+    public ResponseEntity<String> checkPatientProfileAdded() throws Exception{
+    	
+    	boolean added = userService.checkIfPatientProfileAdded(emailDto.getEmail());
+    	String message = "{ \"added\": true }";
+    	if(added==false)
+    		message = "{ \"added\": false }";
+    	
+    	
+    	return new ResponseEntity<String>(message,new HttpHeaders(),HttpStatus.OK);
     }
 	
 }

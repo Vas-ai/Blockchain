@@ -47,7 +47,7 @@ public class UserService {
             credentials = new CredentialsEntity();
             credentials.setEmail(cred.getEmail());
             credentials.setPassword(encoder.encode(cred.getPassword()));
-            credentials.setType(cred.getType());
+            
            
             credentialsDAO.save(credentials);
             id = credentials.getId();
@@ -57,13 +57,13 @@ public class UserService {
     }
     
 
-	public boolean addPatient(Integer credId, PatientDetailsDTO details) {
+	public boolean addPatient(int id, PatientDetailsDTO details) {
 		boolean result = false;
 		try {
 			//get credentials
-			CredentialsEntity cred = credentialsDAO.getById(credId);
+			CredentialsEntity cred = credentialsDAO.getById(id);
 			
-			if(cred.getPatient() == null) {
+			if(cred.getPatient() == null && cred.getDoctor() == null) {
 				
 				PatientsEntity patient = new PatientsEntity();
 				patient.setCredentials( cred );
@@ -92,7 +92,7 @@ public class UserService {
 		try {
 			//get credentials
 			CredentialsEntity cred = credentialsDAO.getById(credId);
-			if(cred.getDoctor() == null) {
+			if(cred.getDoctor() == null && cred.getPatient() == null) {
 				
 				DoctorEntity doctor = new DoctorEntity();
 				doctor.setCredentials( cred );
@@ -118,7 +118,7 @@ public class UserService {
 		List<PatientsEntity> patients = new ArrayList<>();
 		List<PatientSearch> list = new ArrayList<>();
 		
-		patients = patientsDAO.findByGivenNameContainsOrLastNameContainsOrMobileContains(term, term, term);
+		patients = patientsDAO.findByGivenNameOrLastNameOrMobile(term);
 		logger.info(patients.size()+"");
 		for(PatientsEntity p:patients) {
 			
@@ -133,5 +133,30 @@ public class UserService {
 		}
 		
 		return list;
+	}
+
+
+	public boolean checkIfPatientProfileAdded(String email) {
+		
+		if(credentialsDAO.findByEmail(email).getPatient() == null )
+		
+		return false;
+		
+		else
+			return true;
+	}
+
+
+	public String getTypeByEmail(String email) {
+		CredentialsEntity cred = credentialsDAO.findByEmail(email);
+		
+		if(cred.getDoctor() == null && cred.getPatient()==null)
+			return "none";
+		else if( cred.getDoctor() == null && cred.getPatient()!=null )
+			return "patient";
+		else if(cred.getDoctor() != null && cred.getPatient()==null)
+			return "doctor";
+		
+		return "";
 	}
 }
