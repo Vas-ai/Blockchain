@@ -1,11 +1,14 @@
 package com.malay.emr.entities;
 
+import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
@@ -41,6 +44,20 @@ public class DoctorEntity {
 	@OneToOne
 	@JoinColumn(name = "credentials_id")
     private CredentialsEntity credentials;
+
+	 @OneToMany(mappedBy = "doctor")
+	 private List<AppointmentsEntity> appointments;
+	 
+	 
+
+	public List<AppointmentsEntity> getAppointments() {
+		return appointments;
+	}
+
+
+	public void setAppointments(List<AppointmentsEntity> appointments) {
+		this.appointments = appointments;
+	}
 
 
 	public int getId() {

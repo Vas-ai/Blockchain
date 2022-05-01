@@ -1,18 +1,41 @@
 package com.malay.emr.services;
 
+import com.malay.emr.dto.AddAppointmentDTO;
+import com.malay.emr.dto.AppointmentDTo;
 import com.malay.emr.dto.AuthRequest;
 import com.malay.emr.dto.DoctorDetailsDTO;
+import com.malay.emr.dto.Generic1;
+import com.malay.emr.dto.Generic2;
 import com.malay.emr.dto.PatientDetailsDTO;
 import com.malay.emr.dto.PatientSearch;
+import com.malay.emr.dto.VisitDataDTO;
+import com.malay.emr.entities.AppointmentsEntity;
+import com.malay.emr.entities.ComplaintsEntity;
 import com.malay.emr.entities.CredentialsEntity;
+import com.malay.emr.entities.DiagnosisEntity;
 import com.malay.emr.entities.DoctorEntity;
+import com.malay.emr.entities.MedicinesEntity;
+import com.malay.emr.entities.PatientHistoryEntity;
 import com.malay.emr.entities.PatientsEntity;
+import com.malay.emr.entities.SavedTermsEntity;
+import com.malay.emr.entities.TermTypesEntity;
+import com.malay.emr.entities.TestsEntity;
+import com.malay.emr.repository.AppointmentsDAO;
+import com.malay.emr.repository.ComplaintsDAO;
 import com.malay.emr.repository.CredentialsDAO;
+import com.malay.emr.repository.DiagnosisDAO;
 import com.malay.emr.repository.DoctorsDAO;
+import com.malay.emr.repository.MedicinesDAO;
+import com.malay.emr.repository.PatientHistoryDAO;
 import com.malay.emr.repository.PatientsDAO;
+import com.malay.emr.repository.SavedTermsDAO;
+import com.malay.emr.repository.TermTypesDAO;
+import com.malay.emr.repository.TestsDAO;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.transaction.Transactional;
 
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
@@ -34,6 +57,22 @@ public class UserService {
     BCryptPasswordEncoder encoder;
     @Autowired
     ModelMapper mapper;
+    @Autowired
+    AppointmentsDAO appointmentsDAO;
+    @Autowired
+    SavedTermsDAO savedTermsDAO;
+    @Autowired
+    PatientHistoryDAO patientHistoryDAO;
+    @Autowired
+    TermTypesDAO termTypesDAO;
+    @Autowired
+    ComplaintsDAO complaintsDAO;
+    @Autowired
+    TestsDAO testsDAO;
+    @Autowired
+    MedicinesDAO medicinesDAO;
+    @Autowired
+    DiagnosisDAO diagnosisDAO;
     
     Logger logger = (Logger) LoggerFactory.getLogger(UserService.class);
 
@@ -159,4 +198,145 @@ public class UserService {
 		
 		return "";
 	}
+
+
+	public boolean addAppointment(AddAppointmentDTO dto, String email) {
+		
+		DoctorEntity doc = credentialsDAO.findByEmail(email).getDoctor();
+		//check if conflict arises
+		AppointmentsEntity app = appointmentsDAO.findByDoctorAndTime( doc, dto.getTime() );
+		
+		if(app == null) {
+			AppointmentsEntity appointment = new AppointmentsEntity();
+			appointment.setDoctor(doc);
+			appointment.setPatient(patientsDAO.getById(dto.getPatientId()));
+			appointment.setTime(dto.getTime());
+			appointmentsDAO.save(appointment);
+			return true;
+		}
+		
+		return false;
+	}
+
+
+	public List<AppointmentDTo> getAllAppointmentsByDoctor(String email) {
+		List<AppointmentsEntity> list = new ArrayList<>();
+		list = credentialsDAO.findByEmail(email).getDoctor().getAppointments();
+		List<AppointmentDTo> result = new ArrayList<>();
+		for(AppointmentsEntity app:list) {
+			PatientsEntity p = app.getPatient();
+			result.add( new AppointmentDTo(app.getId(), app.getTime(), p.getGivenName()+" "+p.getLastName(),p.getSex() , p.getDob()) );
+		}
+		return result;
+	}
+
+
+	public boolean deleteAppointmentById(Integer id) {
+		AppointmentsEntity appt = appointmentsDAO.getById(id);
+		appointmentsDAO.delete(appt);
+		
+		return true;
+	}
+
+	
+	@Transactional
+	public boolean addVisitData(VisitDataDTO data) {
+		
+		PatientHistoryEntity visit = new PatientHistoryEntity();
+		visit.setAdvice(data.getAdvice());
+		visit.setBp1(data.getBp1());
+		visit.setBp2(data.getBp2());
+		visit.setHeight(data.getHeight());
+		visit.setWeight(data.getWeight());
+		visit.setPulse(data.getPulse());
+		visit.setSpo2(data.getSpo2());
+		visit.setPatient(patientsDAO.getById(data.getPatientId()));
+		patientHistoryDAO.save(visit);
+		
+		//check if terms present or not
+		TermTypesEntity comp = termTypesDAO.getById(2);
+		for( Generic1 g: data.getComplaints() ) {
+			SavedTermsEntity term = savedTermsDAO.findOneByTermAndType(g.getTerm(),comp);
+			ComplaintsEntity ent = new ComplaintsEntity();
+			if( term == null ) {
+				//save the term
+				SavedTermsEntity savedTerm = new SavedTermsEntity();
+				savedTerm.setTerm(g.getTerm().toUpperCase());
+				savedTerm.setType(comp);
+				savedTermsDAO.save(savedTerm);
+				ent.setTerm(savedTerm);
+			}else {
+				ent.setTerm(term);
+				
+			}
+			ent.setHistory(visit);
+			complaintsDAO.save(ent);
+		}
+		
+		
+		TermTypesEntity testType  = termTypesDAO.getById(4);
+		for( Generic1 g: data.getTests() ) {
+			SavedTermsEntity term = savedTermsDAO.findOneByTermAndType(g.getTerm(),testType);
+			TestsEntity test = new TestsEntity(); 
+			if( term == null ) {
+				//save the term
+				SavedTermsEntity savedTerm = new SavedTermsEntity();
+				savedTerm.setTerm(g.getTerm().toUpperCase());
+				savedTerm.setType(testType);
+				savedTermsDAO.save(savedTerm);
+				test.setTerm(savedTerm);
+			}else {
+				test.setTerm(term);
+				
+			}
+			test.setHistory(visit);
+			testsDAO.save(test);
+		}
+		
+		TermTypesEntity med = termTypesDAO.getById(1);
+		for( Generic2 g: data.getMedicines() ) {
+			SavedTermsEntity term = savedTermsDAO.findOneByTermAndType(g.getTerm(),med);
+			MedicinesEntity medicine = new MedicinesEntity();
+			if( term == null ) {
+				//save the term
+				SavedTermsEntity savedTerm = new SavedTermsEntity();
+				savedTerm.setTerm(g.getTerm().toUpperCase());
+				savedTerm.setType(med);
+				savedTermsDAO.save(savedTerm);
+				medicine.setTerm(savedTerm);
+			}else {
+				medicine.setTerm(term);
+				
+			}
+			medicine.setHistory(visit);
+			medicine.setDuration(g.getDuration());
+			medicine.setDurationType(g.getDurationType().toUpperCase());
+			medicinesDAO.save(medicine);
+		}
+		
+		TermTypesEntity diag = termTypesDAO.getById(3);
+		for( Generic2 g: data.getDiagnosis() ) {
+			SavedTermsEntity term = savedTermsDAO.findOneByTermAndType(g.getTerm(),diag);
+			DiagnosisEntity diagn = new DiagnosisEntity();
+			if( term == null ) {
+				//save the term
+				SavedTermsEntity savedTerm = new SavedTermsEntity();
+				savedTerm.setTerm(g.getTerm().toUpperCase());
+				savedTerm.setType(diag);
+				savedTermsDAO.save(savedTerm);
+				diagn.setTerm(savedTerm);
+			}else {
+				diagn.setTerm(term);
+				
+			}
+			diagn.setHistory(visit);
+			diagn.setDuration(g.getDuration());
+			diagn.setDurationType(g.getDurationType().toUpperCase());
+			diagnosisDAO.save(diagn);
+		}
+		
+		return true;
+	}
+	
+	
 }

@@ -1,8 +1,17 @@
 package com.malay.emr.entities;
 
 import java.util.Date;
+import java.util.List;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
 
 @Entity
 @Table(name="patients")
@@ -26,8 +35,30 @@ public class PatientsEntity {
     
     @Column(name="dob")
     private Date dob;
+    
+    @OneToMany(mappedBy = "patient")
+    private List<PatientHistoryEntity> histories;
+    
+    public List<PatientHistoryEntity> getHistories() {
+		return histories;
+	}
 
-    public Date getDob() {
+	public void setHistories(List<PatientHistoryEntity> histories) {
+		this.histories = histories;
+	}
+
+	@OneToMany(mappedBy = "patient")
+    private List<AppointmentsEntity> appointments;
+
+    public List<AppointmentsEntity> getAppointments() {
+		return appointments;
+	}
+
+	public void setAppointments(List<AppointmentsEntity> appointments) {
+		this.appointments = appointments;
+	}
+
+	public Date getDob() {
 		return dob;
 	}
 
