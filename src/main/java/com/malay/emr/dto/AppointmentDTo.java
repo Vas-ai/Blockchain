@@ -5,7 +5,15 @@ import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 public class AppointmentDTo {
-	
+	private int patientId;
+	public int getPatientId() {
+		return patientId;
+	}
+
+	public void setPatientId(int patientId) {
+		this.patientId = patientId;
+	}
+
 	private int id;
 	@JsonFormat(pattern="yyyy-MM-dd HH:mm")
 	private Date time;
@@ -55,13 +63,14 @@ public class AppointmentDTo {
 		this.dob = dob;
 	}
 
-	public AppointmentDTo(int id, Date time, String fullName, String sex, Date dob) {
+	public AppointmentDTo(int id, Date time, String fullName, String sex, Date dob, int patientId) {
 		super();
 		this.id = id;
 		this.time = time;
 		this.fullName = fullName;
 		this.sex = sex;
 		this.dob = dob;
+		this.patientId = patientId;
 	}
 	
 	

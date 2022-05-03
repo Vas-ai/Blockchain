@@ -1,5 +1,20 @@
 package com.malay.emr.services;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import javax.transaction.Transactional;
+
+import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import com.malay.emr.dto.AddAppointmentDTO;
 import com.malay.emr.dto.AppointmentDTo;
 import com.malay.emr.dto.AuthRequest;
@@ -8,6 +23,7 @@ import com.malay.emr.dto.Generic1;
 import com.malay.emr.dto.Generic2;
 import com.malay.emr.dto.PatientDetailsDTO;
 import com.malay.emr.dto.PatientSearch;
+import com.malay.emr.dto.TermDTO;
 import com.malay.emr.dto.VisitDataDTO;
 import com.malay.emr.entities.AppointmentsEntity;
 import com.malay.emr.entities.ComplaintsEntity;
@@ -31,18 +47,6 @@ import com.malay.emr.repository.PatientsDAO;
 import com.malay.emr.repository.SavedTermsDAO;
 import com.malay.emr.repository.TermTypesDAO;
 import com.malay.emr.repository.TestsDAO;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.transaction.Transactional;
-
-import org.modelmapper.ModelMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
@@ -225,7 +229,7 @@ public class UserService {
 		List<AppointmentDTo> result = new ArrayList<>();
 		for(AppointmentsEntity app:list) {
 			PatientsEntity p = app.getPatient();
-			result.add( new AppointmentDTo(app.getId(), app.getTime(), p.getGivenName()+" "+p.getLastName(),p.getSex() , p.getDob()) );
+			result.add( new AppointmentDTo(app.getId(), app.getTime(), p.getGivenName()+" "+p.getLastName(),p.getSex() , p.getDob(),p.getId()) );
 		}
 		return result;
 	}
@@ -336,6 +340,130 @@ public class UserService {
 		}
 		
 		return true;
+	}
+
+
+	public List<TermDTO> getTermsByType(String term,String type) {
+		TermTypesEntity typeEntity = termTypesDAO.findFirstByType(type);
+		List<SavedTermsEntity> terms = savedTermsDAO.findByTermContainingAndType(term, typeEntity, PageRequest.of(0, 10));
+		List<TermDTO> list = new ArrayList<>();
+		for(SavedTermsEntity t:terms) {
+			TermDTO dto = new TermDTO();
+			dto.setWord(t.getTerm());
+			dto.setId(t.getId());
+			list.add(dto);
+			logger.info(t.getTerm());
+		}
+		logger.info(terms.size()+"");
+		return list; 
+	}
+
+
+	public List<VisitDataDTO> getHistoryByPatientId(Integer id) {
+		
+		List<VisitDataDTO> list = new ArrayList<>();
+		PatientsEntity patient = patientsDAO.getById(id);
+		List<PatientHistoryEntity> history = patientHistoryDAO.findByPatientOrderByIdDesc(patient);
+		for(PatientHistoryEntity h:history) {
+			
+			VisitDataDTO dto = new VisitDataDTO();
+			dto.setAdvice(h.getAdvice());
+			dto.setBp1(h.getBp1());
+			dto.setBp2(h.getBp2());
+			dto.setGivenName(patient.getGivenName());
+			dto.setLastName(patient.getLastName());
+			dto.setHeight(h.getHeight());
+			dto.setPulse(h.getPulse());
+			dto.setPatientId(patient.getId());
+			dto.setSpo2(h.getSpo2());
+			dto.setTemp(h.getTemp());
+			dto.setWeight(h.getWeight());
+			dto.setDate(h.getDate());
+			dto.setId(h.getId());
+			List<Generic1> complaints = new ArrayList<Generic1>();
+			for( ComplaintsEntity comp: h.getComplaints() ) {
+				Generic1 g = new Generic1();
+				g.setId(comp.getId());
+				g.setTerm(comp.getTerm().getTerm());
+				complaints.add(g);
+			}
+			
+			List<Generic1> tests = new ArrayList<Generic1>();
+			for( TestsEntity test: h.getTests() ) {
+				Generic1 g = new Generic1();
+				g.setId(test.getId());
+				g.setTerm(test.getTerm().getTerm());
+				tests.add(g);
+			}
+			
+			List<Generic2> diagnosis = new ArrayList<Generic2>();
+			for( DiagnosisEntity diag: h.getDiagnosis() ) {
+				Generic2 g = new Generic2();
+				g.setId(diag.getId());
+				g.setTerm(diag.getTerm().getTerm());
+				g.setDuration(diag.getDuration());
+				g.setDurationType(diag.getDurationType());
+				diagnosis.add(g);
+			}
+			
+			List<Generic2> medicines = new ArrayList<Generic2>();
+			for( MedicinesEntity med: h.getMedicines() ) {
+				Generic2 g = new Generic2();
+				g.setId(med.getId());
+				g.setTerm(med.getTerm().getTerm());
+				g.setDuration(med.getDuration());
+				g.setDurationType(med.getDurationType());
+				medicines.add(g);
+			}
+			dto.setComplaints(complaints);
+			dto.setTests(tests);
+			dto.setDiagnosis(diagnosis);
+			dto.setMedicines(medicines);
+			
+			list.add(dto);
+		}
+		return list;
+	}
+
+
+	public VisitDataDTO getAdjustedMedicinesAndHistoryByPatient(String email) {
+		VisitDataDTO dto = new VisitDataDTO();
+		PatientsEntity patient = credentialsDAO.findByEmail(email).getPatient();
+		dto = getHistoryByPatientId(patient.getId()).get( 0 );
+		List<PatientHistoryEntity> history = patient.getHistories();
+		List<Generic2> list = new ArrayList<>();
+		Date now = new Date();
+		Generic2 g;
+		for(PatientHistoryEntity h:history) {
+			for(MedicinesEntity med:h.getMedicines()) {
+				String type = med.getDurationType();
+				int factor = 0;
+				if( type.equals("DAYS") )
+					factor = 1;
+				else if(type.equals("WEEKS"))
+					factor = 7;
+				else if(type.equals("MONTHS"))
+					factor = 30;
+				else if(type.equals("YEARS"))
+					factor = 365;
+				
+				
+				long diff = now.getTime() - h.getDate().getTime()  ;
+			    long days =  TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS) ;
+			    int daysLeft = med.getDuration()*factor - (int)days;
+			    if( daysLeft >= 0 ) {
+			    	g = new Generic2();
+			    	g.setId(med.getId());
+			    	g.setTerm(med.getTerm().getTerm());
+			    	g.setDuration( daysLeft );
+			    	g.setDurationType("DAYS");
+			    	list.add(g);
+			    }
+				
+			}
+		}
+		dto.setMedicines(list);
+		return dto;
 	}
 	
 	

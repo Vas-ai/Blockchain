@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.malay.emr.dto.Generic2;
 import com.malay.emr.dto.PatientSearch;
 import com.malay.emr.dto.UserEmailDTO;
+import com.malay.emr.dto.VisitDataDTO;
 import com.malay.emr.services.UserService;
 
 @CrossOrigin
@@ -50,6 +52,11 @@ public class PatientController {
     	
     	
     	return new ResponseEntity<String>(message,new HttpHeaders(),HttpStatus.OK);
+    }
+    
+    @RequestMapping(value="/api/history/medicines-adjusted-history", method = RequestMethod.GET)
+    public ResponseEntity<VisitDataDTO> getAdjustedMedicinesByPatient() throws Exception {
+    	return new ResponseEntity<VisitDataDTO>(userService.getAdjustedMedicinesAndHistoryByPatient(emailDto.getEmail()),new HttpHeaders(), HttpStatus.OK);
     }
 	
 }

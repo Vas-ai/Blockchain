@@ -12,6 +12,14 @@ public class Generic2{
 	}
 	private String term;
 	private int duration;
+	private int id;
+	
+	public int getId() {
+		return id;
+	}
+	public void setId(int id) {
+		this.id = id;
+	}
 	public String getTerm() {
 		return term;
 	}
@@ -22,12 +30,7 @@ public class Generic2{
 		return durationType;
 	}
 	private String durationType;
-	public Generic2(String term, int duration, String durationType) {
-		super();
-		this.term = term;
-		this.duration = duration;
-		this.durationType = durationType;
-	}
+	
 	
 	public Generic2() {}
 	

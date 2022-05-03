@@ -6,14 +6,22 @@ public class Generic1 {
 	}
 
 	private String term;
+	private int id;
 
 	public String getTerm() {
 		return term;
 	}
 
-	public Generic1(String term) {
-		super();
-		this.term = term;
+	
+	public int getId() {
+		return id;
 	}
+
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+
 	public Generic1() {}
 }

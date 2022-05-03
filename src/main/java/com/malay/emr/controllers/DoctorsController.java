@@ -9,12 +9,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.malay.emr.dto.AddAppointmentDTO;
 import com.malay.emr.dto.AppointmentDTo;
+import com.malay.emr.dto.TermDTO;
 import com.malay.emr.dto.UserEmailDTO;
 import com.malay.emr.dto.VisitDataDTO;
 import com.malay.emr.services.UserService;
@@ -64,6 +67,20 @@ public class DoctorsController {
     	if(added==false)
     		message = "{ \"added\": false }";
     	return new ResponseEntity<String>(message,new HttpHeaders(),HttpStatus.OK);
+	}
+	
+	@RequestMapping(value="/api/terms",method=RequestMethod.GET)
+	public  ResponseEntity<List<TermDTO>> getTerms(@RequestParam("term") String term,@RequestParam("type") String type) throws Exception{
+		
+		return new ResponseEntity< List<TermDTO> >( userService.getTermsByType(term,type), new HttpHeaders(), HttpStatus.OK );
+		
+	}
+	
+	@RequestMapping(value="/api/history/{id}",method=RequestMethod.GET)
+	public  ResponseEntity<List<VisitDataDTO>> getTerms(@PathVariable Integer id) throws Exception{
+		
+		return new ResponseEntity< List<VisitDataDTO> >( userService.getHistoryByPatientId(id), new HttpHeaders(), HttpStatus.OK );
+		
 	}
 	
 }

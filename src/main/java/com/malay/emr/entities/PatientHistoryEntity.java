@@ -38,7 +38,7 @@ public class PatientHistoryEntity {
 	private int weight;
 	
 	@Column(name="temp")
-	private float temp;
+	private int temp;
 	
 	@Column(name="spo_2")
 	private int spo2;
@@ -148,11 +148,11 @@ public class PatientHistoryEntity {
 		this.weight = weight;
 	}
 
-	public float getTemp() {
+	public int getTemp() {
 		return temp;
 	}
 
-	public void setTemp(float temp) {
+	public void setTemp(int temp) {
 		this.temp = temp;
 	}
 

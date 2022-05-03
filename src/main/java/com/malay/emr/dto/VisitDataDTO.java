@@ -1,11 +1,35 @@
 package com.malay.emr.dto;
 
+import java.util.Date;
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 public class VisitDataDTO {
 	
 	private int patientId;
-	
+	private String givenName;
+	private String lastName;
+	@JsonFormat(pattern="yyyy-MM-dd")
+	private Date date;
+	public Date getDate() {
+		return date;
+	}
+	public void setDate(Date date) {
+		this.date = date;
+	}
+	public String getGivenName() {
+		return givenName;
+	}
+	public void setGivenName(String givenName) {
+		this.givenName = givenName;
+	}
+	public String getLastName() {
+		return lastName;
+	}
+	public void setLastName(String lastName) {
+		this.lastName = lastName;
+	}
 	private int bp1;
 	private int bp2;
 	private int pulse;
@@ -28,7 +52,7 @@ public class VisitDataDTO {
 	public int getWeight() {
 		return weight;
 	}
-	public float getTemp() {
+	public int getTemp() {
 		return temp;
 	}
 	public int getSpo2() {
@@ -58,7 +82,7 @@ public class VisitDataDTO {
 	public void setWeight(int weight) {
 		this.weight = weight;
 	}
-	public void setTemp(float temp) {
+	public void setTemp(int temp) {
 		this.temp = temp;
 	}
 	public void setSpo2(int spo2) {
@@ -89,30 +113,20 @@ public class VisitDataDTO {
 		return diagnosis;
 	}
 	private int weight;
-	private float temp;
+	private int temp;
 	private int spo2;
 	private String advice;
 	private List<Generic1> complaints;
 	private List<Generic1> tests;
 	private List<Generic2> medicines;
 	private List<Generic2> diagnosis;
-	public VisitDataDTO(int patientId, int bp1, int bp2, int pulse, int height, int weight, float temp, int spo2,
-			String advice, List<Generic1> complaints, List<Generic1> tests, List<Generic2> medicines,
-			List<Generic2> diagnosis) {
-		super();
-		this.patientId = patientId;
-		this.bp1 = bp1;
-		this.bp2 = bp2;
-		this.pulse = pulse;
-		this.height = height;
-		this.weight = weight;
-		this.temp = temp;
-		this.spo2 = spo2;
-		this.advice = advice;
-		this.complaints = complaints;
-		this.tests = tests;
-		this.medicines = medicines;
-		this.diagnosis = diagnosis;
+	private int id;
+	
+	public int getId() {
+		return id;
+	}
+	public void setId(int id) {
+		this.id = id;
 	}
 	public VisitDataDTO() {}
 	

@@ -7,5 +7,8 @@ import com.malay.emr.entities.TermTypesEntity;
 
 @Repository
 public interface TermTypesDAO extends JpaRepository<TermTypesEntity, Integer> {
+
+	TermTypesEntity findFirstByType(String type);
+
 	
 }
