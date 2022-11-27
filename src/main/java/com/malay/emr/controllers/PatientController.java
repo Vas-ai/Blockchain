@@ -58,5 +58,10 @@ public class PatientController {
     public ResponseEntity<VisitDataDTO> getAdjustedMedicinesByPatient() throws Exception {
     	return new ResponseEntity<VisitDataDTO>(userService.getAdjustedMedicinesAndHistoryByPatient(emailDto.getEmail()),new HttpHeaders(), HttpStatus.OK);
     }
+    
+    @RequestMapping(value="/api/history", method = RequestMethod.GET)
+    public ResponseEntity<List<VisitDataDTO>> getHistoryByPatientEmail() throws Exception {
+    	return new ResponseEntity<List<VisitDataDTO>>(userService.getHistoryByPatientEmail(emailDto.getEmail()),new HttpHeaders(), HttpStatus.OK);
+    }
 	
 }

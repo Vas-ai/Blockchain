@@ -12,4 +12,6 @@ import com.malay.emr.entities.PatientsEntity;
 public interface PatientsDAO extends JpaRepository<PatientsEntity,Integer> {
 	@Query("select p from PatientsEntity p where p.givenName like %?1% or p.lastName like %?1% or p.mobile like %?1% ")
 	List<PatientsEntity> findByGivenNameOrLastNameOrMobile(String term);
+	
+	PatientsEntity findById(int id);
 }

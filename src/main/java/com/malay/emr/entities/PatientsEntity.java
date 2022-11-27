@@ -39,6 +39,9 @@ public class PatientsEntity {
     @OneToMany(mappedBy = "patient")
     private List<PatientHistoryEntity> histories;
     
+    @OneToMany(mappedBy = "patient")
+    private List<HistoryPermissionEntity> grantedHistory;
+    
     public List<PatientHistoryEntity> getHistories() {
 		return histories;
 	}

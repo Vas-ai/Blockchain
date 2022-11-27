@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
@@ -14,9 +15,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-
+import com.malay.emr.dto.AccessDTO;
 import com.malay.emr.dto.AddAppointmentDTO;
 import com.malay.emr.dto.AppointmentDTo;
+import com.malay.emr.dto.ApprovalDTO;
 import com.malay.emr.dto.AuthRequest;
 import com.malay.emr.dto.DoctorDetailsDTO;
 import com.malay.emr.dto.Generic1;
@@ -30,6 +32,7 @@ import com.malay.emr.entities.ComplaintsEntity;
 import com.malay.emr.entities.CredentialsEntity;
 import com.malay.emr.entities.DiagnosisEntity;
 import com.malay.emr.entities.DoctorEntity;
+import com.malay.emr.entities.HistoryPermissionEntity;
 import com.malay.emr.entities.MedicinesEntity;
 import com.malay.emr.entities.PatientHistoryEntity;
 import com.malay.emr.entities.PatientsEntity;
@@ -41,6 +44,7 @@ import com.malay.emr.repository.ComplaintsDAO;
 import com.malay.emr.repository.CredentialsDAO;
 import com.malay.emr.repository.DiagnosisDAO;
 import com.malay.emr.repository.DoctorsDAO;
+import com.malay.emr.repository.HistoryApprovalDAO;
 import com.malay.emr.repository.MedicinesDAO;
 import com.malay.emr.repository.PatientHistoryDAO;
 import com.malay.emr.repository.PatientsDAO;
@@ -77,6 +81,8 @@ public class UserService {
     MedicinesDAO medicinesDAO;
     @Autowired
     DiagnosisDAO diagnosisDAO;
+    @Autowired
+    HistoryApprovalDAO historyApprovalDAO;
     
     Logger logger = (Logger) LoggerFactory.getLogger(UserService.class);
 
@@ -464,6 +470,62 @@ public class UserService {
 		}
 		dto.setMedicines(list);
 		return dto;
+	}
+
+
+	public List<VisitDataDTO> getHistoryByPatientEmail(String email) {
+		return getHistoryByPatientId( credentialsDAO.findByEmail(email).getPatient().getId() );
+		
+	}
+
+
+	public List<DoctorDetailsDTO> getDoctorsByTerm(String term) {
+		return doctorsDAO.findByFullNameOrClinic(term).stream().map(d -> {
+			DoctorDetailsDTO dto = new DoctorDetailsDTO();
+			dto.setFullName(d.getFullName());
+			dto.setId(d.getId());
+			dto.setClinic(d.getClinic());
+			dto.setQualification(d.getQualification());
+			return dto;
+		}).collect(Collectors.toList());
+	}
+
+	@Transactional
+	public boolean addHistoryApproval(ApprovalDTO dto) {
+		//check if the combo exists
+		if( historyApprovalDAO.findByDoctorAndPatient(doctorsDAO.findById(dto.getDoctor()),patientsDAO.findById(dto.getPatient())).size() == 1
+				)
+			return false;
+		else {
+			HistoryPermissionEntity p = new HistoryPermissionEntity();
+			p.setDoctor(doctorsDAO.findById(dto.getDoctor()));
+			p.setPatient(patientsDAO.findById(dto.getPatient()));
+			p.setGranted(false);
+			historyApprovalDAO.save(p);
+			return true;
+		}
+	}
+
+
+	public List<AccessDTO> getPermissionsByPatientEmail(String email) {
+		// TODO Auto-generated method stub
+		return historyApprovalDAO.findByPatient(
+				credentialsDAO.findByEmail(email).getPatient()).stream().map(p -> {
+					AccessDTO dto = new com.malay.emr.dto.AccessDTO();
+					dto.setAllowed(p.getGranted());
+					dto.setId(p.getId());
+					dto.setDoctor(new DoctorDetailsDTO(p.getDoctor().getFullName(), p.getDoctor().getClinic(), p.getDoctor().getQualification()));
+					return dto;
+				}).collect(Collectors.toList());
+	}
+
+
+	public void togglePermissionsById(int id) {
+	HistoryPermissionEntity	app = historyApprovalDAO.findById(id);
+		if(app.getGranted()==false)
+			app.setGranted(true);
+		else
+			app.setGranted(false);
 	}
 	
 	

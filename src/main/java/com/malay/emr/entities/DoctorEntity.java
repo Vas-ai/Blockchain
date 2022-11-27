@@ -39,8 +39,19 @@ public class DoctorEntity {
 	@Column(name="qualification")
     private String qualification;
 	
+	@OneToMany(mappedBy = "doctor")
+	private List<HistoryPermissionEntity> historyPermission;
 	
-	
+	public List<HistoryPermissionEntity> getHistoryPermission() {
+		return historyPermission;
+	}
+
+
+	public void setHistoryPermission(List<HistoryPermissionEntity> historyPermission) {
+		this.historyPermission = historyPermission;
+	}
+
+
 	@OneToOne
 	@JoinColumn(name = "credentials_id")
     private CredentialsEntity credentials;

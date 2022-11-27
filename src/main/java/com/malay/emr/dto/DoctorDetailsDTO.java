@@ -1,6 +1,14 @@
 package com.malay.emr.dto;
 
 public class DoctorDetailsDTO {
+	private int id;
+	
+	public int getId() {
+		return id;
+	}
+	public void setId(int id) {
+		this.id = id;
+	}
 	private String fullName;
 	private String clinic;
 	private String qualification;

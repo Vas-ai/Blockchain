@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.malay.emr.dto.AddAppointmentDTO;
 import com.malay.emr.dto.AppointmentDTo;
+import com.malay.emr.dto.DoctorDetailsDTO;
 import com.malay.emr.dto.TermDTO;
 import com.malay.emr.dto.UserEmailDTO;
 import com.malay.emr.dto.VisitDataDTO;
@@ -30,6 +31,7 @@ public class DoctorsController {
 	private UserService userService;
 	@Autowired
 	private UserEmailDTO dto;
+	
 	
 	@RequestMapping(value = "/api/appointment", method = RequestMethod.POST)
     public ResponseEntity<String> addAppointments( @RequestBody AddAppointmentDTO appointment ) throws Exception{
@@ -60,7 +62,7 @@ public class DoctorsController {
     	return new ResponseEntity<String>(message,new HttpHeaders(),HttpStatus.OK);
 	}
 	
-	@RequestMapping(value="/api/visit",method=RequestMethod.POST)
+	@RequestMapping(value="/api/record",method=RequestMethod.POST)
 	public ResponseEntity<String> addVisitData( @RequestBody VisitDataDTO data ) throws Exception {
 		boolean added = userService.addVisitData(data);
 		String message = "{ \"added\": true }";
@@ -80,6 +82,13 @@ public class DoctorsController {
 	public  ResponseEntity<List<VisitDataDTO>> getTerms(@PathVariable Integer id) throws Exception{
 		
 		return new ResponseEntity< List<VisitDataDTO> >( userService.getHistoryByPatientId(id), new HttpHeaders(), HttpStatus.OK );
+		
+	}
+	
+	@RequestMapping(value="/api/doctor",method=RequestMethod.GET)
+	public  ResponseEntity<List<DoctorDetailsDTO>> getDoctors(@RequestParam("term") String term) throws Exception{
+		
+		return new ResponseEntity< List<DoctorDetailsDTO> >( userService.getDoctorsByTerm(term), new HttpHeaders(), HttpStatus.OK );
 		
 	}
 	
