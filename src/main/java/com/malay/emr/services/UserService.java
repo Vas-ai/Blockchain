@@ -519,7 +519,7 @@ public class UserService {
 				}).collect(Collectors.toList());
 	}
 
-
+	@Transactional
 	public void togglePermissionsById(int id) {
 	HistoryPermissionEntity	app = historyApprovalDAO.findById(id);
 		if(app.getGranted()==false)
