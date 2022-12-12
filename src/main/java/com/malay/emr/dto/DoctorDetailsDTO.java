@@ -1,6 +1,8 @@
 package com.malay.emr.dto;
 
-public class DoctorDetailsDTO {
+import java.io.Serializable;
+
+public class DoctorDetailsDTO implements Serializable {
 	private int id;
 	
 	public int getId() {

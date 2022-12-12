@@ -1,17 +1,15 @@
 package com.malay.emr.controllers;
 
+import java.math.BigInteger;
 import java.util.List;
 
+import com.malay.emr.services.BlockchainService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.*;
 
 import com.malay.emr.dto.AccessDTO;
 import com.malay.emr.dto.ApprovalDTO;
@@ -25,6 +23,8 @@ public class CommonController {
 	private UserService userService;
 	@Autowired
 	private UserEmailDTO dto;
+	@Autowired
+	private BlockchainService blockchainService;
 	
 	 @RequestMapping(value = "/api/approval", method = RequestMethod.POST)
 	    public ResponseEntity<String> addHistoryApproval( @RequestBody ApprovalDTO dto) throws Exception{
@@ -51,4 +51,13 @@ public class CommonController {
 	    	
 		 	return new ResponseEntity<String>(message,new HttpHeaders(),HttpStatus.OK);
 	    }
+
+	@RequestMapping(value="/api/approval/generate-hash",method=RequestMethod.GET)
+	public ResponseEntity<String> generateHashByAccId( @RequestParam int id ) throws Exception {
+		BigInteger bi = blockchainService.checksum( userService.getPermissionById(id) );
+
+		String message = "{\"hash\": \""+bi+"\"}";
+
+		return new ResponseEntity<String>(message,new HttpHeaders(),HttpStatus.OK);
+	}
 }

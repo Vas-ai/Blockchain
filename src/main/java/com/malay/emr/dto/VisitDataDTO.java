@@ -1,12 +1,21 @@
 package com.malay.emr.dto;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-public class VisitDataDTO {
+public class VisitDataDTO implements Serializable{
 	
+	@Override
+	public String toString() {
+		return "VisitDataDTO [patientId=" + patientId + ", givenName=" + givenName + ", lastName=" + lastName
+				+ ", date=" + date + ", bp1=" + bp1 + ", bp2=" + bp2 + ", pulse=" + pulse + ", height=" + height
+				+ ", weight=" + weight + ", temp=" + temp + ", spo2=" + spo2 + ", advice=" + advice + ", complaints="
+				+ complaints + ", tests=" + tests + ", medicines=" + medicines + ", diagnosis=" + diagnosis + ", id="
+				+ id + "]";
+	}
 	private int patientId;
 	private String givenName;
 	private String lastName;

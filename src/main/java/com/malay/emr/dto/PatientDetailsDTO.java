@@ -1,8 +1,9 @@
 package com.malay.emr.dto;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public class PatientDetailsDTO {
+public class PatientDetailsDTO implements Serializable {
 	private String givenName;
 	private String lastName;
 	private Date dob;

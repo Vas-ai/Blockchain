@@ -1,6 +1,13 @@
 package com.malay.emr.dto;
 
-public class Generic2{
+import java.io.Serializable;
+
+public class Generic2 implements Serializable{
+	@Override
+	public String toString() {
+		return "Generic2 [term=" + term + ", duration=" + duration + ", id=" + id + ", durationType=" + durationType
+				+ "]";
+	}
 	public void setTerm(String term) {
 		this.term = term;
 	}

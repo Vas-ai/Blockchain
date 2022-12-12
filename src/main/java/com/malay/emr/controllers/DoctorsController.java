@@ -1,8 +1,14 @@
 package com.malay.emr.controllers;
 
+import java.io.IOException;
+import java.math.BigInteger;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +27,7 @@ import com.malay.emr.dto.DoctorDetailsDTO;
 import com.malay.emr.dto.TermDTO;
 import com.malay.emr.dto.UserEmailDTO;
 import com.malay.emr.dto.VisitDataDTO;
+import com.malay.emr.services.BlockchainService;
 import com.malay.emr.services.UserService;
 
 @CrossOrigin
@@ -31,6 +38,13 @@ public class DoctorsController {
 	private UserService userService;
 	@Autowired
 	private UserEmailDTO dto;
+	@Autowired
+    BlockchainService blockchainService;
+    
+    @Value("${enable.blockchain}")
+    private boolean enableBlockchain;
+    
+    Logger logger = (Logger) LoggerFactory.getLogger(DoctorsController.class);
 	
 	
 	@RequestMapping(value = "/api/appointment", method = RequestMethod.POST)
@@ -64,12 +78,34 @@ public class DoctorsController {
 	
 	@RequestMapping(value="/api/record",method=RequestMethod.POST)
 	public ResponseEntity<String> addVisitData( @RequestBody VisitDataDTO data ) throws Exception {
-		boolean added = userService.addVisitData(data);
-		String message = "{ \"added\": true }";
-    	if(added==false)
-    		message = "{ \"added\": false }";
+		int id = userService.addVisitData(data);
+		if(enableBlockchain) {
+			//just get test object and nothing else
+			VisitDataDTO dto = userService.getVisitDataByHistoryId(id);
+			try {
+				logger.debug( blockchainService.checksum(dto)+"" );
+			} catch (NoSuchAlgorithmException | IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		String message = "{ \"added\": true,\"id\":"+id+" }";
+    	
     	return new ResponseEntity<String>(message,new HttpHeaders(),HttpStatus.OK);
 	}
+	
+	@RequestMapping(value="/api/record/generate-hash",method=RequestMethod.GET)
+	public ResponseEntity<String> generateHashByVisitId( @RequestParam int id ) throws Exception {
+		BigInteger bi = blockchainService.checksum( userService.getVisitDataByHistoryId(id) );
+		
+		logger.debug( bi+"" );
+		
+		String message = "{\"hash\": \""+bi+"\"}";
+    	
+    	return new ResponseEntity<String>(message,new HttpHeaders(),HttpStatus.OK);
+	}
+	
+	
 	
 	@RequestMapping(value="/api/terms",method=RequestMethod.GET)
 	public  ResponseEntity<List<TermDTO>> getTerms(@RequestParam("term") String term,@RequestParam("type") String type) throws Exception{
@@ -79,10 +115,17 @@ public class DoctorsController {
 	}
 	
 	@RequestMapping(value="/api/history/{id}",method=RequestMethod.GET)
-	public  ResponseEntity<List<VisitDataDTO>> getTerms(@PathVariable Integer id) throws Exception{
-		
-		return new ResponseEntity< List<VisitDataDTO> >( userService.getHistoryByPatientId(id), new HttpHeaders(), HttpStatus.OK );
-		
+	public  ResponseEntity<?> getTerms(@PathVariable Integer id) throws Exception{
+
+		if(userService.getTypeByEmail(dto.getEmail()).equals("doctor")){
+			boolean hasAccess = userService.checkAccessByEmailAndPid(dto.getEmail(),id);
+			logger.info("hasax:"+hasAccess);
+			if(hasAccess)
+				return new ResponseEntity< List<VisitDataDTO> >( userService.getHistoryByPatientId(id), new HttpHeaders(), HttpStatus.OK );
+
+		}
+
+		return new ResponseEntity<String>("",new HttpHeaders(), HttpStatus.PRECONDITION_FAILED );
 	}
 	
 	@RequestMapping(value="/api/doctor",method=RequestMethod.GET)

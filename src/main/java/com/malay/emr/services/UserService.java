@@ -1,5 +1,7 @@
 package com.malay.emr.services;
 
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -12,6 +14,7 @@ import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -83,6 +86,7 @@ public class UserService {
     DiagnosisDAO diagnosisDAO;
     @Autowired
     HistoryApprovalDAO historyApprovalDAO;
+    
     
     Logger logger = (Logger) LoggerFactory.getLogger(UserService.class);
 
@@ -217,10 +221,18 @@ public class UserService {
 		AppointmentsEntity app = appointmentsDAO.findByDoctorAndTime( doc, dto.getTime() );
 		
 		if(app == null) {
+			PatientsEntity p = patientsDAO.getById(dto.getPatientId());
 			AppointmentsEntity appointment = new AppointmentsEntity();
 			appointment.setDoctor(doc);
-			appointment.setPatient(patientsDAO.getById(dto.getPatientId()));
+			appointment.setPatient(p);
 			appointment.setTime(dto.getTime());
+
+			HistoryPermissionEntity permission = new HistoryPermissionEntity();
+			permission.setGranted(true);
+			permission.setDoctor(doc);
+			permission.setPatient(p);
+
+			historyApprovalDAO.save(permission);
 			appointmentsDAO.save(appointment);
 			return true;
 		}
@@ -250,7 +262,7 @@ public class UserService {
 
 	
 	@Transactional
-	public boolean addVisitData(VisitDataDTO data) {
+	public int addVisitData(VisitDataDTO data) {
 		
 		PatientHistoryEntity visit = new PatientHistoryEntity();
 		visit.setAdvice(data.getAdvice());
@@ -301,6 +313,7 @@ public class UserService {
 			}
 			test.setHistory(visit);
 			testsDAO.save(test);
+			
 		}
 		
 		TermTypesEntity med = termTypesDAO.getById(1);
@@ -345,7 +358,72 @@ public class UserService {
 			diagnosisDAO.save(diagn);
 		}
 		
-		return true;
+		
+		
+		return visit.getId();
+	}
+
+
+	public VisitDataDTO getVisitDataByHistoryId(int id) {
+		// TODO Auto-generated method stub
+
+		VisitDataDTO dto = new VisitDataDTO();
+		PatientHistoryEntity h = patientHistoryDAO.findById(id);
+		
+		dto.setAdvice(h.getAdvice());
+		dto.setBp1(h.getBp1());
+		dto.setBp2(h.getBp2());
+		dto.setGivenName(h.getPatient().getGivenName());
+		dto.setLastName(h.getPatient().getLastName());
+		dto.setHeight(h.getHeight());
+		dto.setPulse(h.getPulse());
+		dto.setPatientId(h.getPatient().getId());
+		dto.setSpo2(h.getSpo2());
+		dto.setTemp(h.getTemp());
+		dto.setWeight(h.getWeight());
+		dto.setDate(h.getDate());
+		dto.setId(h.getId());
+		List<Generic1> complaints = new ArrayList<Generic1>();
+		for( ComplaintsEntity comp: h.getComplaints() ) {
+			Generic1 g = new Generic1();
+			g.setId(comp.getId());
+			g.setTerm(comp.getTerm().getTerm());
+			complaints.add(g);
+		}
+		
+		List<Generic1> tests = new ArrayList<Generic1>();
+		for( TestsEntity test: h.getTests() ) {
+			Generic1 g = new Generic1();
+			g.setId(test.getId());
+			g.setTerm(test.getTerm().getTerm());
+			tests.add(g);
+		}
+		
+		List<Generic2> diagnosis = new ArrayList<Generic2>();
+		for( DiagnosisEntity diag: h.getDiagnosis() ) {
+			Generic2 g = new Generic2();
+			g.setId(diag.getId());
+			g.setTerm(diag.getTerm().getTerm());
+			g.setDuration(diag.getDuration());
+			g.setDurationType(diag.getDurationType());
+			diagnosis.add(g);
+		}
+		
+		List<Generic2> medicines = new ArrayList<Generic2>();
+		for( MedicinesEntity med: h.getMedicines() ) {
+			Generic2 g = new Generic2();
+			g.setId(med.getId());
+			g.setTerm(med.getTerm().getTerm());
+			g.setDuration(med.getDuration());
+			g.setDurationType(med.getDurationType());
+			medicines.add(g);
+		}
+		dto.setComplaints(complaints);
+		dto.setTests(tests);
+		dto.setDiagnosis(diagnosis);
+		dto.setMedicines(medicines);
+		
+		return dto;
 	}
 
 
@@ -527,6 +605,23 @@ public class UserService {
 		else
 			app.setGranted(false);
 	}
-	
-	
+
+
+	public boolean checkAccessByEmailAndPid(String email, Integer id) {
+
+		if( !historyApprovalDAO.findByDoctorAndPatientAndGranted(credentialsDAO.findByEmail(email).getDoctor(),patientsDAO.findById(id).get(),true).isEmpty() )
+			return true;
+
+		return false;
+	}
+
+	public AccessDTO getPermissionById(int id) {
+		AccessDTO dto = new AccessDTO();
+		HistoryPermissionEntity p = historyApprovalDAO.findById(id);
+		dto.setDoctor( new DoctorDetailsDTO(p.getDoctor().getFullName(),p.getDoctor().getClinic(),p.getDoctor().getQualification()) );
+		dto.setPatientDetailsDTO(new PatientDetailsDTO(p.getPatient().getGivenName(), p.getPatient().getLastName(), p.getPatient().getDob(), p.getPatient().getSex(),
+				p.getPatient().getMobile()));
+		dto.setAllowed(p.getGranted());
+		return dto;
+	}
 }

@@ -13,4 +13,6 @@ public interface PatientHistoryDAO extends JpaRepository<PatientHistoryEntity, I
 
 	List<PatientHistoryEntity> findByPatientOrderByIdDesc(PatientsEntity patient);
 	
+	PatientHistoryEntity findById(int id);
+	
 }

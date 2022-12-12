@@ -1,5 +1,6 @@
 package com.malay.emr.repository;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -18,4 +19,5 @@ public interface HistoryApprovalDAO extends JpaRepository<HistoryPermissionEntit
 	
 	HistoryPermissionEntity findById(int id);
 
+    List<HistoryPermissionEntity> findByDoctorAndPatientAndGranted(DoctorEntity doctor, PatientsEntity patientsEntity, boolean b);
 }
